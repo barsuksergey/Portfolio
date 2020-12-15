@@ -1,0 +1,55 @@
+---
+title: "Student T vs Normal Distribution"
+runtime: shiny
+output: html_document
+---
+## Students T and Standard Normal Distribution comparison
+
+This is the plot comparing T distribution at different degrees of freedom to Normal distribution
+
+```{r}
+curve(dnorm(x), from = -5, to = 5, lwd = 3, lty = 2, ylab = "Probability", xlab = "Std Deviations", main = "T-student at 1,5,10,20 df vs Normal Distribution")
+
+colors = c('red','light green', 'blue', 'purple')
+
+df = c(20,10,5,1)
+
+for (i in 1:4) {
+    curve(dt(x,df[i]),from = -5, to = 5, col = colors[i], lwd = 1, add = TRUE)
+}
+legend(-4.5,0.4, legend = c('df=20', 'df=10','df=5','df=1'), lty = 1, col = colors)
+```
+
+At 1 degree of freedom T distribution assumes significantly large probabilities at extreme standard deviations
+
+```{r}
+co.x = seq(-3,3,length = 100)
+co.y = dnorm(co.x,0,1)
+curve(dnorm(x), from = -5, to = 5, lwd = 3, xlab = "Std Deviations", ylab = "Probability", main = "Area under curve of T at 1 df vs Normal Distribution at 3 Std Dev's")
+polygon(c(-3,co.x,3),c(0,co.y,0), col = 'red', density = c(20,20), angle = 60)
+co.t.x = seq(-3,3,length = 100)
+co.t.y = dt(co.t.x,1)
+curve(dt(x,1), from = -5, to = 5, lwd = 3, add = TRUE)
+polygon(c(-3,co.t.x,3),c(0,co.t.y,0), col = 'blue', density = c(20,20), angle = 30)
+legend(-4.5,0.4, legend = c('Normal Distr','Student-T'), lty = 1, lwd =2, col = c('red','blue'))
+```
+
+## Try it yourself
+
+If sample is larger than 30 we can assume the similarities of means and standard deviations of samples and the population and the T distribution becomes the same shape as the standard normal one
+
+```{r}
+inputPanel(
+  
+  sliderInput("df_adjust", label = "Degrees of Freedom adjustment",
+              min = 1, max = 40, value = 1, step = 1)
+)
+
+renderPlot({
+  curve(dnorm(x), from = -5, to = 5, col = 'red', lwd = 3, lty = 2, xlab = "Std Deviations", ylab = "Probability", main = "T vs Std Normal Distribution")
+  curve(dt(x, input$df_adjust), from = -5, to = 5, lwd = 2, add = TRUE)
+})
+```
+
+
+
