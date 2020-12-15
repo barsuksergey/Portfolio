@@ -17,10 +17,10 @@ while True:
     # driver = webdriver.Chrome()
     driver.get('https://myfit4less.gymmanager.com/portal/login.asp')
     email = driver.find_element_by_xpath("//input[@type='email']")
-    email.send_keys('barsuk.sergio@gmail.com')
+    email.send_keys('email') #input your email
     sleep(2)
     password = driver.find_element_by_xpath("//input[@type='password']")
-    password.send_keys('Qwerty1!')
+    password.send_keys('password') # input your password
     html = driver.find_element_by_tag_name('html')
     html.send_keys(Keys.END)
     sleep(2)
