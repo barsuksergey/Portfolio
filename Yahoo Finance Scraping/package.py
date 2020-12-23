@@ -2,6 +2,7 @@ import pandas as pd
 import datetime as dt
 from time import sleep
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
 from bs4 import BeautifulSoup
 import re
@@ -21,10 +22,12 @@ def converter(x):
                 return str(x)
         elif bool(re.match(r'\d+(?:\.)\d+$', x)) == True:
             return float(x)
+        elif bool(re.match(r'^[0-9]+$', x)) == True:
+            return float(x)
         else:
             return str(x)
     else:
-        return str(x)
+        return (x)
                 
 
 class Ticker:
@@ -32,7 +35,7 @@ class Ticker:
         self.index = index.upper()
     
     def profile(self):
-        url = f'https://finance.media.yahoo.com/quote/{self.index}?p={self.index}'
+        url = f'https://ca.finance.yahoo.com/quote/{self.index}?p={self.index}&.tsrc=fin-srch'
         dfs = pd.read_html(url, match = '.+')
         frames = [dfs[0],dfs[1]]
         data = pd.concat(frames)
@@ -43,28 +46,14 @@ class Ticker:
         return data
     
     def key_stats(self):
-        url = f'https://finance.media.yahoo.com/quote/{self.index}/key-statistics?p={self.index}'
+        url = f'https://ca.finance.yahoo.com/quote/{self.index}/key-statistics?p={self.index}'
         dfs = pd.read_html(url, match = '.+')
         data = pd.DataFrame()
-        frames = [dfs[x] for x in range(1,len(dfs))]
+        frames = [dfs[x] for x in range(0,len(dfs))]
         data = data.append(frames)
         data.columns = ['KPI', 'value']
         data['value'] = data['value'].apply(lambda x: converter(x))
         data = data.reset_index().drop('index', axis =1).set_index('KPI')
-        
-        return data
-
-
-    def val_measures(self):
-        url = f'https://finance.media.yahoo.com/quote/{self.index}/key-statistics?p={self.index}'
-        dfs = pd.read_html(url, match = '.+')
-        data = dfs[0]
-        data.rename(columns = {data.columns[0] : 'KPI'}, inplace = True)
-        data = data.reset_index().drop('index', axis =1).set_index('KPI')
-        for x in range(len(data.columns)):
-            data.iloc[x] = data.iloc[x].apply(lambda x: converter(x))
-        for x in range(len(data.columns)):
-            data.iloc[x] = data.iloc[x].astype(float)
         
         return data
 
@@ -76,8 +65,11 @@ class Ticker:
         unix_to = int(dt.datetime(date_to.year,date_to.month,date_to.day).replace(tzinfo=dt.timezone.utc).timestamp())
         unix_from = int(dt.datetime(date_from.year,date_from.month,date_from.day).replace(tzinfo=dt.timezone.utc).timestamp())
         url = f'https://ca.finance.yahoo.com/quote/{self.index}/history?period1={unix_from}&period2={unix_to}&interval=1d&filter=history&frequency=1d&includeAdjustedClose=true'
-        browser = webdriver.Chrome()
-        browser.implicitly_wait(3)
+        options = Options()
+        options.add_argument("--headless")
+        options.add_experimental_option('excludeSwitches', ['enable-logging'])
+        browser = webdriver.Chrome(options=options)
+        browser.implicitly_wait(2)
         browser.get(url)
         html = browser.find_element_by_tag_name('html')
         old_rows = browser.execute_script("return document.getElementsByTagName('tr').length")
@@ -107,5 +99,5 @@ class Ticker:
             data.iloc[:,x] = data.iloc[:,x].str.replace(',', '').astype(float)
         data = data.drop([len(data)-1])
         data.iloc[:,0] = pd.to_datetime(data.iloc[:,0])
-        
+        browser.close()
         return data
